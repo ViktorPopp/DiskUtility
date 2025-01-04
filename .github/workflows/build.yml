@@ -20,11 +20,11 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Build app for release
-        run: msbuild DiskUtilityCLI/DiskUtilityCLI.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release
+        run: msbuild DiskUtilityCLI/DiskUtilityCLI.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release -property:Platform=x64
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: diskutil
+          name: diskutil.exe
           path: |
-            Build/Binraries/DiskUtilityCLI.exe
+            Build/Release-x64/Binraries/diskutil.exe
