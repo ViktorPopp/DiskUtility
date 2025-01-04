@@ -98,10 +98,18 @@ bool Application::promptIterationCount(int& iterationCount) {
 
 void Application::performDiskTests(const std::string& diskLetter, size_t dataSizeMB, bool useCaching, int iterationCount) {
     const size_t dataSizeBytes = dataSizeMB * 1024 * 1024;
-    std::vector<char> buffer(1024 * 1024, '\0');
+    std::vector<char> buffer(1024 * 1024 * 4, '\0');
     std::string filePath = diskLetter + ":\\DiskUtilsTestFile.dat";
 
     std::vector<double> writeSpeeds, readSpeeds;
+
+    // Warm-up runs
+    for (int i = 0; i < 2; ++i) {
+		std::cout << "\nWarm-up run " << i + 1 << "\n";
+        testWriteSpeed(filePath, buffer, dataSizeMB, useCaching);
+        testReadSpeed(filePath, buffer, dataSizeMB, useCaching);
+        cleanUpTestFile(filePath);
+    }
 
     for (int iteration = 1; iteration <= iterationCount; ++iteration) {
         std::cout << "\nIteration " << iteration << ":\n";
@@ -117,7 +125,6 @@ void Application::performDiskTests(const std::string& diskLetter, size_t dataSiz
 
     displayFinalResults(writeSpeeds, readSpeeds);
 }
-
 
 double Application::testWriteSpeed(const std::string& filePath, std::vector<char>& buffer, size_t dataSizeMB, bool useCaching) {
     HANDLE hFile = CreateFileA(
@@ -139,7 +146,7 @@ double Application::testWriteSpeed(const std::string& filePath, std::vector<char
     auto start = std::chrono::high_resolution_clock::now();
 
     size_t bufferSize = buffer.size();
-    for (size_t i = 0; i < dataSizeMB; ++i) {
+    for (size_t i = 0; i < dataSizeMB * 1024 / (bufferSize / 1024); ++i) {
         DWORD bytesWritten;
         if (!WriteFile(hFile, buffer.data(), bufferSize, &bytesWritten, NULL) || bytesWritten != bufferSize) {
             std::cerr << "Error: WriteFile failed. " << std::system_category().message(GetLastError()) << std::endl;
@@ -148,6 +155,7 @@ double Application::testWriteSpeed(const std::string& filePath, std::vector<char
         }
     }
 
+    FlushFileBuffers(hFile); // Ensure data is written to disk
     auto end = std::chrono::high_resolution_clock::now();
     CloseHandle(hFile);
 
