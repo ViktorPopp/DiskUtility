@@ -21,3 +21,10 @@ jobs:
 
       - name: Build app for release
         run: msbuild DiskUtilityCLI/DiskUtilityCLI.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: DiskUtilityCLI-Build
+          path: |
+            Build/Binraries/DiskUtilityCLI.exe
