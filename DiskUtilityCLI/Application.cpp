@@ -12,6 +12,7 @@ void Application::run() {
     std::string diskLetter;
     size_t dataSizeMB;
     bool useCaching;
+    int iterationCount;
 
     if (!promptDiskLetter(diskLetter)) {
         return;
@@ -25,7 +26,11 @@ void Application::run() {
         return;
     }
 
-    performDiskTests(diskLetter, dataSizeMB, useCaching);
+    if (!promptIterationCount(iterationCount)) {
+        return;
+    }
+
+    performDiskTests(diskLetter, dataSizeMB, useCaching, iterationCount);
 }
 
 bool Application::isDiskValid(const std::string& diskLetter) {
@@ -58,14 +63,14 @@ bool Application::promptDataSize(size_t& dataSizeMB) {
         return false;
     }
 
-	if (dataSizeMB > 8192) {
+    if (dataSizeMB > 8192) {
         char choice;
-		std::cerr << "Warning: Large data size may take a long time to write/read.\n" << "Do you want to continue? (y/n): ";
-		std::cin >> choice;
-		if (choice != 'y' && choice != 'Y') {
-			return false;
-		}
-	}
+        std::cerr << "Warning: Large data size may take a long time to write/read.\n" << "Do you want to continue? (y/n): ";
+        std::cin >> choice;
+        if (choice != 'y' && choice != 'Y') {
+            return false;
+        }
+    }
 
     return true;
 }
@@ -79,14 +84,26 @@ bool Application::promptUseCaching(bool& useCaching) {
     return true;
 }
 
-void Application::performDiskTests(const std::string& diskLetter, size_t dataSizeMB, bool useCaching) {
+bool Application::promptIterationCount(int& iterationCount) {
+    std::cout << "Enter the number of iterations: ";
+    std::cin >> iterationCount;
+
+    if (iterationCount <= 0) {
+        std::cerr << "Error: Iteration count must be greater than 0.\n";
+        return false;
+    }
+
+    return true;
+}
+
+void Application::performDiskTests(const std::string& diskLetter, size_t dataSizeMB, bool useCaching, int iterationCount) {
     const size_t dataSizeBytes = dataSizeMB * 1024 * 1024;
     std::vector<char> buffer(1024 * 1024, '\0');
     std::string filePath = diskLetter + ":\\DiskUtilsTestFile.dat";
 
     std::vector<double> writeSpeeds, readSpeeds;
 
-    for (int iteration = 1; iteration <= 6; ++iteration) {
+    for (int iteration = 1; iteration <= iterationCount; ++iteration) {
         std::cout << "\nIteration " << iteration << ":\n";
 
         double writeSpeed = testWriteSpeed(filePath, buffer, dataSizeMB, useCaching);
@@ -100,6 +117,7 @@ void Application::performDiskTests(const std::string& diskLetter, size_t dataSiz
 
     displayFinalResults(writeSpeeds, readSpeeds);
 }
+
 
 double Application::testWriteSpeed(const std::string& filePath, std::vector<char>& buffer, size_t dataSizeMB, bool useCaching) {
     HANDLE hFile = CreateFileA(
