@@ -5,6 +5,8 @@
 #include <vector>
 #include <windows.h>
 #include <numeric>
+#include <memory>
+#include <system_error>
 
 void Application::run() {
     std::string diskLetter;
@@ -100,26 +102,36 @@ void Application::performDiskTests(const std::string& diskLetter, size_t dataSiz
 }
 
 double Application::testWriteSpeed(const std::string& filePath, std::vector<char>& buffer, size_t dataSizeMB, bool useCaching) {
-    std::ios::openmode mode = std::ios::binary;
-    if (!useCaching) {
-        std::ios::sync_with_stdio(false);  // Disable buffering for non-caching mode
-    }
+    HANDLE hFile = CreateFileA(
+        filePath.c_str(),
+        GENERIC_WRITE,
+        0,
+        NULL,
+        CREATE_ALWAYS,
+        useCaching ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_NO_BUFFERING,
+        NULL
+    );
 
-    std::ofstream outFile(filePath, mode);
-    if (!outFile) {
-        std::cerr << "Error: Unable to open file for writing." << std::endl;
+    if (hFile == INVALID_HANDLE_VALUE) {
+        std::cerr << "Error: Unable to open file for writing. " << std::system_category().message(GetLastError()) << std::endl;
         return -1;
     }
 
     std::cout << "Writing " << dataSizeMB << " MB to disk..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
 
+    size_t bufferSize = buffer.size();
     for (size_t i = 0; i < dataSizeMB; ++i) {
-        outFile.write(buffer.data(), buffer.size());
+        DWORD bytesWritten;
+        if (!WriteFile(hFile, buffer.data(), bufferSize, &bytesWritten, NULL) || bytesWritten != bufferSize) {
+            std::cerr << "Error: WriteFile failed. " << std::system_category().message(GetLastError()) << std::endl;
+            CloseHandle(hFile);
+            return -1;
+        }
     }
 
     auto end = std::chrono::high_resolution_clock::now();
-    outFile.close();
+    CloseHandle(hFile);
 
     std::chrono::duration<double> elapsed = end - start;
     double writeSpeed = dataSizeMB / elapsed.count();
@@ -131,24 +143,30 @@ double Application::testWriteSpeed(const std::string& filePath, std::vector<char
 }
 
 double Application::testReadSpeed(const std::string& filePath, std::vector<char>& buffer, size_t dataSizeMB, bool useCaching) {
-    std::ios::openmode mode = std::ios::binary;
-    if (!useCaching) {
-        std::ios::sync_with_stdio(false);  // Disable buffering for non-caching mode
-    }
+    HANDLE hFile = CreateFileA(
+        filePath.c_str(),
+        GENERIC_READ,
+        0,
+        NULL,
+        OPEN_EXISTING,
+        useCaching ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_NO_BUFFERING,
+        NULL
+    );
 
-    std::ifstream inFile(filePath, mode);
-    if (!inFile) {
-        std::cerr << "Error: Unable to open file for reading." << std::endl;
+    if (hFile == INVALID_HANDLE_VALUE) {
+        std::cerr << "Error: Unable to open file for reading. " << std::system_category().message(GetLastError()) << std::endl;
         return -1;
     }
 
     std::cout << "Reading " << dataSizeMB << " MB from disk..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
 
-    while (inFile.read(buffer.data(), buffer.size())) {}
+    size_t bufferSize = buffer.size();
+    DWORD bytesRead;
+    while (ReadFile(hFile, buffer.data(), bufferSize, &bytesRead, NULL) && bytesRead == bufferSize) {}
 
     auto end = std::chrono::high_resolution_clock::now();
-    inFile.close();
+    CloseHandle(hFile);
 
     std::chrono::duration<double> elapsed = end - start;
     double readSpeed = dataSizeMB / elapsed.count();
