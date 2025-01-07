@@ -10,30 +10,7 @@
 
 namespace Disk { namespace Benchmark
 	{
-    void run() {
-        std::string diskLetter;
-        size_t dataSizeMB;
-        bool useCaching;
-        int iterationCount;
-
-        if (!promptDiskLetter(diskLetter)) {
-            return;
-        }
-
-        if (!promptDataSize(dataSizeMB)) {
-            return;
-        }
-
-        if (!promptUseCaching(useCaching)) {
-            return;
-        }
-
-        if (!promptIterationCount(iterationCount)) {
-            return;
-        }
-
-        performDiskTests(diskLetter, dataSizeMB, useCaching, iterationCount);
-    }
+    std::string result;
 
     bool isDiskValid(const std::string& diskLetter) {
         std::string path = diskLetter + ":\\";
@@ -42,60 +19,6 @@ namespace Disk { namespace Benchmark
             return false;
         }
         return (attributes & FILE_ATTRIBUTE_DIRECTORY);
-    }
-
-    bool promptDiskLetter(std::string& diskLetter) {
-        std::cout << "Enter the disk letter (e.g., C): ";
-        std::cin >> diskLetter;
-
-        if (!isDiskValid(diskLetter)) {
-            std::cerr << "Error: The specified disk is not valid or accessible.\n";
-            return false;
-        }
-
-        return true;
-    }
-
-    bool promptDataSize(size_t& dataSizeMB) {
-        std::cout << "Enter the size of data to write (in MB): ";
-        std::cin >> dataSizeMB;
-
-        if (dataSizeMB == 0) {
-            std::cerr << "Error: Data size must be greater than 0.\n";
-            return false;
-        }
-
-        if (dataSizeMB > 8192) {
-            char choice;
-            std::cerr << "Warning: Large data size may take a long time to write/read.\n" << "Do you want to continue? (y/n): ";
-            std::cin >> choice;
-            if (choice != 'y' && choice != 'Y') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    bool promptUseCaching(bool& useCaching) {
-        char choice;
-        std::cout << "Enable caching? (y/n): ";
-        std::cin >> choice;
-
-        useCaching = (choice == 'y' || choice == 'Y');
-        return true;
-    }
-
-    bool promptIterationCount(int& iterationCount) {
-        std::cout << "Enter the number of iterations: ";
-        std::cin >> iterationCount;
-
-        if (iterationCount <= 0) {
-            std::cerr << "Error: Iteration count must be greater than 0.\n";
-            return false;
-        }
-
-        return true;
     }
 
     void performDiskTests(const std::string& diskLetter, size_t dataSizeMB, bool useCaching, int iterationCount) {
@@ -125,7 +48,7 @@ namespace Disk { namespace Benchmark
             cleanUpTestFile(filePath);
         }
 
-        displayFinalResults(writeSpeeds, readSpeeds);
+        appendFinalResult(writeSpeeds, readSpeeds);
     }
 
     double testWriteSpeed(const std::string& filePath, std::vector<char>& buffer, size_t dataSizeMB, bool useCaching) {
@@ -214,7 +137,7 @@ namespace Disk { namespace Benchmark
         }
     }
 
-    void displayFinalResults(const std::vector<double>& writeSpeeds, const std::vector<double>& readSpeeds) {
+    void appendFinalResult(const std::vector<double>& writeSpeeds, const std::vector<double>& readSpeeds) {
         double avgWriteSpeed = std::accumulate(writeSpeeds.begin(), writeSpeeds.end(), 0.0) / writeSpeeds.size();
         double avgReadSpeed = std::accumulate(readSpeeds.begin(), readSpeeds.end(), 0.0) / readSpeeds.size();
 
