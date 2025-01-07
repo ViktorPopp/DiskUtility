@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Disk/Disk.h"
+#include "Disk/DiskBenchmarkForm.h"
 #include <thread>
 
 namespace SystemUtils {
@@ -73,8 +74,8 @@ namespace SystemUtils {
 		}
 #pragma endregion
 	private: System::Void runDiskBenchmarkButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		std::thread diskBenchmarkThread(Disk::Benchmark::performDiskTests, "D", 1024, false, 6);
-		diskBenchmarkThread.detach();
+		DiskBenchmarkForm^ diskBenchmarkForm = gcnew DiskBenchmarkForm();
+		diskBenchmarkForm->Show();
 	}
 	};
 }

@@ -146,15 +146,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Disk\Benchmark.cpp" />
+    <ClCompile Include="Forms\Disk\DiskBenchmarkForm.cpp" />
     <ClCompile Include="Forms\MainForm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Disk\Disk.h" />
+    <ClInclude Include="Forms\Disk\DiskBenchmarkForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="Forms\MainForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\Disk\DiskBenchmarkForm.resx" />
     <EmbeddedResource Include="Forms\MainForm.resx">
       <DependentUpon>Forms\MainForm.h</DependentUpon>
     </EmbeddedResource>

@@ -21,6 +21,9 @@
     <ClCompile Include="Disk\Benchmark.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Forms\Disk\DiskBenchmarkForm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Forms\MainForm.h">
@@ -29,8 +32,16 @@
     <ClInclude Include="Disk\Disk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Forms\Disk\DiskBenchmarkForm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Forms\Disk\DiskBenchmarkForm.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
